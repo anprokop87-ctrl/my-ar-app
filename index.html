@@ -5,80 +5,50 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
     <title>AR</title>
     <style>
-        /* Стиль кнопки-заставки, чтобы точно попасть пальцем */
-        #start-button {
+        body { margin: 0; background: black; overflow: hidden; }
+        #ui {
             position: fixed;
-            top: 50%;
-            left: 50%;
+            top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            padding: 20px 40px;
-            font-size: 24px;
-            background: #007aff;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            z-index: 9999;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 10;
+            text-align: center;
+        }
+        button {
+            font-size: 24px; padding: 20px 40px;
+            background: #007aff; color: white;
+            border: none; border-radius: 15px;
         }
     </style>
-    <!-- Библиотеки -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.9.5/dist/mindar-image.prod.js"></script>
-    <script src="https://aframe.io/releases/1.4.2/aframe.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.9.5/dist/mindar-image-aframe.prod.js"></script>
-</head>
-<body style="margin: 0; overflow: hidden; background: black;">
     
-    <!-- Огромная кнопка по центру, видна всегда до старта -->
-    <button id="start-button" onclick="startAR()">▶ НАЧАТЬ AR</button>
+    <!-- Рабочая версия 1.2.5 -->
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
+    <!-- A-Frame совместимой версии -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+</head>
+<body>
+    <div id="ui">
+        <button onclick="run()">▶ ЗАПУСТИТЬ КАМЕРУ</button>
+    </div>
 
-    <a-scene 
-        id="ar-scene"
-        mindar-image="imageTargetSrc: target.mind;" 
-        vr-mode-ui="enabled: false" 
-        device-orientation-permission-ui="enabled: false"
-        renderer="colorManagement: true; sortObjects: true; alpha: false"
-        embedded
-        style="display: none;">
-        
-        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-        
+    <a-scene id="scene"
+             mindar-image="imageTargetSrc: target.mind;"
+             vr-mode-ui="enabled: false"
+             device-orientation-permission-ui="enabled: false"
+             embedded
+             style="display: none;">
+        <a-camera position="0 0 0"></a-camera>
         <a-entity mindar-image-target="targetIndex: 0">
-            <a-gltf-model 
-                rotation="0 0 0" 
-                position="0 0 0.1" 
-                scale="0.5 0.5 0.5" 
-                src="model.glb" 
-                animation-mixer>
-            </a-gltf-model>
+            <a-gltf-model src="model.glb" scale="0.5 0.5 0.5" position="0 0 0.1"></a-gltf-model>
         </a-entity>
     </a-scene>
 
     <script>
-        function startAR() {
-            // Прячем кнопку
-            document.getElementById('start-button').style.display = 'none';
-            
-            // Показываем сцену
-            var scene = document.getElementById('ar-scene');
+        function run() {
+            document.getElementById('ui').style.display = 'none';
+            var scene = document.getElementById('scene');
             scene.style.display = 'block';
-            
-            // Даём Safari 100мс на отрисовку и запрашиваем видео
-            setTimeout(function() {
-                // Ищем компонент MindAR
-                if (scene.components && scene.components['mindar-image']) {
-                    scene.components['mindar-image'].startVideo();
-                }
-            }, 150);
         }
-        
-        // Дополнительная перестраховка для iOS 17+
-        window.addEventListener('load', function() {
-            // На случай если video не стартует автоматически после старта сцены
-            var scene = document.getElementById('ar-scene');
-            scene.addEventListener('arReady', function() {
-                console.log('AR готов');
-            });
-        });
     </script>
 </body>
 </html>
