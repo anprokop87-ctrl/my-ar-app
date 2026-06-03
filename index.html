@@ -12,32 +12,27 @@
             background-color: black;
             position: fixed;
         }
-        #start-overlay {
-            position: fixed;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            background: black;
-            z-index: 999;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+        /* Стилизуем стандартную AR-кнопку A-Frame под наш дизайн */
+        .a-dialog-allow-button {
+            background: #007aff !important;
+            color: white !important;
+            border: none !important;
+            border-radius: 15px !important;
+            font-size: 24px !important;
+            padding: 20px 50px !important;
+            box-shadow: 0 4px 20px rgba(0,122,255,0.5) !important;
+            letter-spacing: 1px !important;
+            font-family: -apple-system, sans-serif !important;
+            text-transform: uppercase !important;
         }
-        #start-btn {
-            font-size: 24px;
-            padding: 20px 50px;
-            background: #007aff;
-            color: white;
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 20px rgba(0,122,255,0.5);
-            cursor: pointer;
+        .a-dialog-deny-button {
+            display: none !important;
         }
-        #start-hint {
-            color: rgba(255,255,255,0.6);
-            margin-top: 20px;
-            font-family: -apple-system, sans-serif;
-            font-size: 14px;
+        /* Подсказка под кнопкой */
+        .a-dialog-text {
+            color: rgba(255,255,255,0.6) !important;
+            font-family: -apple-system, sans-serif !important;
+            font-size: 14px !important;
         }
     </style>
 
@@ -46,52 +41,31 @@
 </head>
 <body>
 
-    <div id="start-overlay">
-        <button id="start-btn">▶ ЗАПУСТИТЬ AR</button>
-        <div id="start-hint">Потребуется доступ к камере</div>
-    </div>
-
     <a-scene 
-        id="ar-scene"
         mindar-image="imageTargetSrc: target.mind;"
         vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: false"
-        embedded
-        style="display: none;">
+        device-orientation-permission-ui="enabled: true">
         
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
         
         <a-entity mindar-image-target="targetIndex: 0">
-            <a-box position="0 0 0.05" scale="0.3 0.3 0.3" color="red"></a-box>
+            <!-- Временно красный куб для проверки -->
+            <a-box 
+                position="0 0 0.05" 
+                scale="0.3 0.3 0.3" 
+                color="red">
+            </a-box>
+            <!-- Раскомментируйте когда куб заработает:
+            <a-gltf-model 
+                src="model.glb"
+                position="0 0 0"
+                scale="0.15 0.15 0.15"
+                rotation="0 0 0"
+                animation-mixer>
+            </a-gltf-model>
+            -->
         </a-entity>
     </a-scene>
 
-    <script>
-        document.getElementById('start-btn').addEventListener('click', function() {
-            
-            // Убираем затемнение
-            document.getElementById('start-overlay').style.display = 'none';
-            
-            // Показываем сцену
-            var scene = document.getElementById('ar-scene');
-            scene.style.display = 'block';
-            
-            // Запускаем камеру через MindAR
-            function startMindAR() {
-                var mindar = scene.components['mindar-image'];
-                if (mindar) {
-                    mindar.startVideo();
-                } else {
-                    setTimeout(startMindAR, 100);
-                }
-            }
-            
-            if (scene.hasLoaded) {
-                startMindAR();
-            } else {
-                scene.addEventListener('loaded', startMindAR);
-            }
-        });
-    </script>
 </body>
 </html>
