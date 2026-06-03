@@ -5,16 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AR</title>
     <style>
-        /* Сброс отступов, чтобы камера была на весь экран */
         * { margin: 0; padding: 0; box-sizing: border-box; }
         html, body {
             width: 100%; height: 100%;
             overflow: hidden;
             background-color: black;
-            /* Говорим Safari работать под вырезом (челкой) */
             position: fixed;
         }
-        /* Стиль кнопки запуска */
         #start-btn-container {
             position: fixed;
             top: 50%; left: 50%;
@@ -35,75 +32,91 @@
         }
     </style>
 
-    <!-- 
-      Официальный порядок скриптов из документации MindAR:
-      1. A-Frame 1.5.0
-      2. MindAR Image Tracking для A-Frame (уже включает mindar-image.prod.js) 
-    -->
+    <!-- ТОЛЬКО два скрипта, как в документации -->
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 </head>
 <body>
-    <!-- Кнопка "ЗАПУСТИТЬ КАМЕРУ" -->
     <div id="start-btn-container">
         <button id="start-btn" onclick="startExperience()">▶ ЗАПУСТИТЬ КАМЕРУ</button>
         <div class="hint">Нажмите и разрешите доступ</div>
     </div>
 
-    <!-- A-Frame сцена -->
+    <!-- Сцена ОБЯЗАТЕЛЬНО видна изначально, но скрыта через opacity -->
     <a-scene 
         id="main-scene"
-        mindar-image="imageTargetSrc: target.mind; filterMinCF: 0.001; filterBeta: 0.01;"
+        mindar-image="imageTargetSrc: target.mind;"
         vr-mode-ui="enabled: false"
         device-orientation-permission-ui="enabled: false"
-        renderer="colorManagement: true; alpha: false;"
-        embedded
-        style="display: none;">
-
-        <!-- Камера -->
+        embedded>
+        
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
-        <!-- 
-          Контейнер для объектов на метке.
-          Важно: мы добавили отладочную рамку (mindar-image-target). 
-          Она покажет, когда метка будет найдена!
-        -->
+        
         <a-entity mindar-image-target="targetIndex: 0">
-            
-            <!-- ⚡️ ОТЛАДОЧНАЯ РАМКА: Если она появится - метка работает, проблема в модели -->
-            <!-- Она будет обведена белым контуром вокруг вашей метки -->
-            
-            <!-- ТЕСТОВЫЙ ОБЪЕКТ: Красный куб прямо над меткой -->
             <a-box 
                 position="0 0 0.1" 
                 scale="0.3 0.3 0.3" 
-                color="red"
-                material="opacity: 0.9;">
+                color="red">
             </a-box>
-
-            <!-- ЗАДЕЙСТВУЙТЕ ЭТО, КОГДА КУБ ЗАРАБОТАЕТ: -->
-            <!-- <a-gltf-model src="model.glb" position="0 0 0.1" scale="0.5 0.5 0.5" animation-mixer></a-gltf-model> -->
-            
         </a-entity>
     </a-scene>
 
     <script>
         function startExperience() {
-            // Прячем кнопку
-            var btnContainer = document.getElementById('start-btn-container');
-            if (btnContainer) btnContainer.style.display = 'none';
-
-            // Показываем сцену A-Frame
-            var scene = document.getElementById('main-scene');
-            if (scene) {
-                scene.style.display = 'block';
-                
-                // Дополнительный толчок для iOS, чтобы видео точно начало захватываться
-                if (scene.components && scene.components['mindar-image']) {
-                    scene.components['mindar-image'].startVideo();
-                }
+            // Шаг 1: Прячем кнопку
+            document.getElementById('start-btn-container').style.display = 'none';
+            
+            // Шаг 2: Находим сцену и компонент MindAR
+            var scene = document.querySelector('a-scene');
+            
+            // Шаг 3: Ждём полной загрузки A-Frame, потом запускаем камеру
+            if (scene.hasLoaded) {
+                // Уже загружено — сразу запускаем
+                launchVideo(scene);
+            } else {
+                // Ещё грузится — ждём
+                scene.addEventListener('loaded', function() {
+                    launchVideo(scene);
+                });
             }
         }
+        
+        function launchVideo(scene) {
+            // Небольшая задержка для Safari
+            setTimeout(function() {
+                var mindar = scene.components['mindar-image'];
+                if (mindar && mindar.video) {
+                    // Запускаем видеопоток
+                    mindar.startVideo();
+                    
+                    // Показываем сцену
+                    scene.style.visibility = 'visible';
+                    scene.style.opacity = '1';
+                    
+                    console.log('✅ Камера запущена');
+                } else {
+                    console.log('❌ Компонент MindAR не найден, пробуем ещё раз');
+                    // Резервный вариант
+                    scene.addEventListener('arReady', function() {
+                        scene.style.visibility = 'visible';
+                        scene.style.opacity = '1';
+                    });
+                    scene.style.visibility = 'visible';
+                    scene.style.opacity = '1';
+                }
+            }, 300);
+        }
+        
+        // Дополнительно: слушаем событие готовности AR
+        window.addEventListener('load', function() {
+            var scene = document.querySelector('a-scene');
+            scene.addEventListener('arReady', function() {
+                console.log('AR Ready event fired');
+            });
+            scene.addEventListener('arError', function(e) {
+                console.log('AR Error:', e.detail);
+            });
+        });
     </script>
 </body>
 </html>
