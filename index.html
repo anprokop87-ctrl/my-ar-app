@@ -32,7 +32,6 @@
             border-radius: 15px;
             box-shadow: 0 4px 20px rgba(0,122,255,0.5);
             cursor: pointer;
-            letter-spacing: 1px;
         }
         #start-hint {
             color: rgba(255,255,255,0.6);
@@ -47,13 +46,11 @@
 </head>
 <body>
 
-    <!-- Затемнение с кнопкой -->
     <div id="start-overlay">
         <button id="start-btn">▶ ЗАПУСТИТЬ AR</button>
         <div id="start-hint">Потребуется доступ к камере</div>
     </div>
 
-    <!-- A-Frame сцена (изначально скрыта) -->
     <a-scene 
         id="ar-scene"
         mindar-image="imageTargetSrc: target.mind;"
@@ -65,7 +62,12 @@
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
         
         <a-entity mindar-image-target="targetIndex: 0">
-            <a-box position="0 0 0.05" scale="0.2 0.2 0.2" color="red"></a-box>
+            <a-gltf-model 
+                src="model.glb"
+                position="0 0 0"
+                scale="0.15 0.15 0.15"
+                rotation="0 0 0"
+                animation-mixer>
             </a-gltf-model>
         </a-entity>
     </a-scene>
@@ -73,48 +75,28 @@
     <script>
         document.getElementById('start-btn').addEventListener('click', function() {
             
-            // Шаг 1: Сначала запрашиваем камеру, чтобы диалог появился сразу
-            navigator.mediaDevices.getUserMedia({
-                video: {
-                    facingMode: 'environment',
-                    width: { ideal: 1280 },
-                    height: { ideal: 720 }
-                },
-                audio: false
-            })
-            .then(function(tempStream) {
-                
-                // Шаг 2: Останавливаем временный поток (он был нужен только для диалога)
-                tempStream.getTracks().forEach(function(track) {
-                    track.stop();
-                });
-                
-                // Шаг 3: Прячем затемнение
-                document.getElementById('start-overlay').style.display = 'none';
-                
-                // Шаг 4: Показываем сцену и даём MindAR самому запросить камеру
-                var scene = document.getElementById('ar-scene');
-                scene.style.display = 'block';
-                
-                // Шаг 5: Запускаем стандартный метод MindAR
-                // Поскольку пользователь уже разрешил камеру, второго диалога НЕ БУДЕТ
-                scene.addEventListener('loaded', function() {
-                    var mindar = scene.components['mindar-image'];
-                    if (mindar) {
-                        mindar.startVideo();
-                    }
-                });
-                
-                if (scene.hasLoaded) {
-                    var mindar = scene.components['mindar-image'];
-                    if (mindar) {
-                        mindar.startVideo();
-                    }
+            // Убираем затемнение
+            document.getElementById('start-overlay').style.display = 'none';
+            
+            // Показываем сцену
+            var scene = document.getElementById('ar-scene');
+            scene.style.display = 'block';
+            
+            // Запускаем камеру через MindAR
+            function startMindAR() {
+                var mindar = scene.components['mindar-image'];
+                if (mindar) {
+                    mindar.startVideo();
+                } else {
+                    setTimeout(startMindAR, 100);
                 }
-            })
-            .catch(function(err) {
-                alert('Нет доступа к камере: ' + err.message);
-            });
+            }
+            
+            if (scene.hasLoaded) {
+                startMindAR();
+            } else {
+                scene.addEventListener('loaded', startMindAR);
+            }
         });
     </script>
 </body>
