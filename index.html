@@ -12,22 +12,119 @@
             background-color: black;
             position: fixed;
         }
+        #start-overlay {
+            position: fixed;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            background: black;
+            z-index: 999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        #start-btn {
+            font-size: 24px;
+            padding: 20px 50px;
+            background: #007aff;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,122,255,0.5);
+            cursor: pointer;
+            letter-spacing: 1px;
+        }
+        #start-hint {
+            color: rgba(255,255,255,0.6);
+            margin-top: 20px;
+            font-family: -apple-system, sans-serif;
+            font-size: 14px;
+        }
     </style>
 
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 </head>
 <body>
+
+    <!-- Затемняющий слой с единственной кнопкой -->
+    <div id="start-overlay">
+        <button id="start-btn">ЗАПУСТИТЬ AR</button>
+        <div id="start-hint">Потребуется доступ к камере</div>
+    </div>
+
+    <!-- A-Frame сцена (скрыта до получения разрешения камеры) -->
     <a-scene 
+        id="ar-scene"
         mindar-image="imageTargetSrc: target.mind;"
         vr-mode-ui="enabled: false"
-        device-orientation-permission-ui="enabled: true">
+        device-orientation-permission-ui="enabled: false"
+        embedded
+        style="display: none;">
         
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
         
         <a-entity mindar-image-target="targetIndex: 0">
-            <a-gltf-model src="model.glb" position="0 0 0.1" scale="0.5 0.5 0.5" animation-mixer></a-gltf-model>
+            <a-gltf-model 
+                src="model.glb"
+                position="0 0 0"
+                scale="0.15 0.15 0.15"
+                rotation="0 0 0"
+                animation-mixer>
+            </a-gltf-model>
         </a-entity>
     </a-scene>
+
+    <script>
+        var stream = null; // Сохраним поток камеры
+
+        document.getElementById('start-btn').addEventListener('click', function() {
+            
+            // Шаг 1: Сразу запрашиваем камеру (системный диалог появляется ЗДЕСЬ и СРАЗУ)
+            navigator.mediaDevices.getUserMedia({
+                video: {
+                    facingMode: 'environment',
+                    width: { ideal: 1280 },
+                    height: { ideal: 720 }
+                },
+                audio: false
+            })
+            .then(function(videoStream) {
+                // Сохраняем поток
+                stream = videoStream;
+                
+                // Шаг 2: Прячем затемнение
+                document.getElementById('start-overlay').style.display = 'none';
+                
+                // Шаг 3: Показываем сцену
+                var scene = document.getElementById('ar-scene');
+                scene.style.display = 'block';
+                
+                // Шаг 4: Когда A-Frame загрузился, подсовываем ему наш поток
+                function injectStream() {
+                    var mindar = scene.components['mindar-image'];
+                    if (mindar && mindar.video) {
+                        // Отдаём уже разрешённый поток в MindAR
+                        mindar.video.srcObject = stream;
+                        mindar.video.play().then(function() {
+                            console.log('✅ AR запущен c готовым потоком');
+                        });
+                    } else {
+                        // MindAR ещё не готов, ждём 100мс и пробуем снова
+                        setTimeout(injectStream, 100);
+                    }
+                }
+                
+                if (scene.hasLoaded) {
+                    injectStream();
+                } else {
+                    scene.addEventListener('loaded', injectStream);
+                }
+            })
+            .catch(function(err) {
+                alert('Нет доступа к камере: ' + err.message);
+            });
+        });
+    </script>
 </body>
 </html>
