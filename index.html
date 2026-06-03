@@ -45,8 +45,8 @@
             if (track) {
               // Пытаемся установить высокое разрешение и частоту кадров
               track.applyConstraints({
-                width: { ideal: 640 },
-                height: { ideal: 640 },
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
                 frameRate: { ideal: 30 }
               }).catch(function() {
                 // Если не получилось — ок, используем что есть
