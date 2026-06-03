@@ -11,6 +11,29 @@
         background-color: black;
         position: fixed;
       }
+      
+      /* Кнопка внизу экрана */
+      #think-btn {
+        position: fixed;
+        bottom: 40px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 100;
+        display: none; /* Скрыта по умолчанию */
+        
+        font-size: 18px;
+        padding: 14px 36px;
+        background: rgba(0, 122, 255, 0.9);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+        border-radius: 30px;
+        font-family: -apple-system, sans-serif;
+        cursor: pointer;
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+        letter-spacing: 0.5px;
+      }
     </style>
   </head>
   <body>
@@ -33,26 +56,30 @@
       </a-entity>
     </a-scene>
 
+    <!-- Кнопка «Подумать» -->
+    <button id="think-btn" onclick="openLink()">💭 Подумать</button>
+
     <script>
-      // Принудительно задаём параметры видео для всех браузеров
+      // Ссылка, которая откроется при нажатии
+      var thinkLink = 'https://example.com'; // ← ЗАМЕНИТЕ НА ВАШУ ССЫЛКУ
+      
+      function openLink() {
+        window.open(thinkLink, '_blank');
+      }
+      
+      // Показываем/прячем кнопку при обнаружении/потере метки
       window.addEventListener('load', function() {
         var scene = document.getElementById('ar-scene');
+        var thinkBtn = document.getElementById('think-btn');
         
-        scene.addEventListener('arReady', function() {
-          var video = document.querySelector('video');
-          if (video && video.srcObject) {
-            var track = video.srcObject.getVideoTracks()[0];
-            if (track) {
-              // Пытаемся установить высокое разрешение и частоту кадров
-              track.applyConstraints({
-                width: { ideal: 1280 },
-                height: { ideal: 720 },
-                frameRate: { ideal: 30 }
-              }).catch(function() {
-                // Если не получилось — ок, используем что есть
-              });
-            }
-          }
+        // Когда метка обнаружена
+        scene.addEventListener('targetFound', function() {
+          thinkBtn.style.display = 'block';
+        });
+        
+        // Когда метка потеряна
+        scene.addEventListener('targetLost', function() {
+          thinkBtn.style.display = 'none';
         });
       });
     </script>
