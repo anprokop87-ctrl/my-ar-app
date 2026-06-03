@@ -2,52 +2,107 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>AR</title>
     <style>
-        body { margin: 0; background: black; overflow: hidden; }
-        #ui {
+        /* Сброс отступов, чтобы камера была на весь экран */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body {
+            width: 100%; height: 100%;
+            overflow: hidden;
+            background-color: black;
+            /* Говорим Safari работать под вырезом (челкой) */
+            position: fixed;
+        }
+        /* Стиль кнопки запуска */
+        #start-btn-container {
             position: fixed;
             top: 50%; left: 50%;
             transform: translate(-50%, -50%);
-            z-index: 10;
+            z-index: 100;
             text-align: center;
         }
-        button {
+        #start-btn {
             font-size: 24px; padding: 20px 40px;
             background: #007aff; color: white;
             border: none; border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+        }
+        .hint {
+            color: white;
+            margin-top: 15px;
+            font-family: sans-serif;
         }
     </style>
-    
-    <!-- Рабочая версия 1.2.5 -->
-    <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"></script>
-    <!-- A-Frame совместимой версии -->
-    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+
+    <!-- 
+      Официальный порядок скриптов из документации MindAR:
+      1. A-Frame 1.5.0
+      2. MindAR Image Tracking для A-Frame (уже включает mindar-image.prod.js) 
+    -->
+    <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 </head>
 <body>
-    <div id="ui">
-        <button onclick="run()">▶ ЗАПУСТИТЬ КАМЕРУ</button>
+    <!-- Кнопка "ЗАПУСТИТЬ КАМЕРУ" -->
+    <div id="start-btn-container">
+        <button id="start-btn" onclick="startExperience()">▶ ЗАПУСТИТЬ КАМЕРУ</button>
+        <div class="hint">Нажмите и разрешите доступ</div>
     </div>
 
-    <a-scene id="scene"
-             mindar-image="imageTargetSrc: target.mind;"
-             vr-mode-ui="enabled: false"
-             device-orientation-permission-ui="enabled: false"
-             embedded
-             style="display: none;">
-        <a-camera position="0 0 0"></a-camera>
+    <!-- A-Frame сцена -->
+    <a-scene 
+        id="main-scene"
+        mindar-image="imageTargetSrc: target.mind; filterMinCF: 0.001; filterBeta: 0.01;"
+        vr-mode-ui="enabled: false"
+        device-orientation-permission-ui="enabled: false"
+        renderer="colorManagement: true; alpha: false;"
+        embedded
+        style="display: none;">
+
+        <!-- Камера -->
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+        <!-- 
+          Контейнер для объектов на метке.
+          Важно: мы добавили отладочную рамку (mindar-image-target). 
+          Она покажет, когда метка будет найдена!
+        -->
         <a-entity mindar-image-target="targetIndex: 0">
-            <a-box position="0 0 0.05" scale="0.2 0.2 0.2" color="red"></a-box>
+            
+            <!-- ⚡️ ОТЛАДОЧНАЯ РАМКА: Если она появится - метка работает, проблема в модели -->
+            <!-- Она будет обведена белым контуром вокруг вашей метки -->
+            
+            <!-- ТЕСТОВЫЙ ОБЪЕКТ: Красный куб прямо над меткой -->
+            <a-box 
+                position="0 0 0.1" 
+                scale="0.3 0.3 0.3" 
+                color="red"
+                material="opacity: 0.9;">
+            </a-box>
+
+            <!-- ЗАДЕЙСТВУЙТЕ ЭТО, КОГДА КУБ ЗАРАБОТАЕТ: -->
+            <!-- <a-gltf-model src="model.glb" position="0 0 0.1" scale="0.5 0.5 0.5" animation-mixer></a-gltf-model> -->
+            
         </a-entity>
     </a-scene>
 
     <script>
-        function run() {
-            document.getElementById('ui').style.display = 'none';
-            var scene = document.getElementById('scene');
-            scene.style.display = 'block';
+        function startExperience() {
+            // Прячем кнопку
+            var btnContainer = document.getElementById('start-btn-container');
+            if (btnContainer) btnContainer.style.display = 'none';
+
+            // Показываем сцену A-Frame
+            var scene = document.getElementById('main-scene');
+            if (scene) {
+                scene.style.display = 'block';
+                
+                // Дополнительный толчок для iOS, чтобы видео точно начало захватываться
+                if (scene.components && scene.components['mindar-image']) {
+                    scene.components['mindar-image'].startVideo();
+                }
+            }
         }
     </script>
 </body>
