@@ -8,59 +8,20 @@
       html, body {
         width: 100%; height: 100%;
         overflow: hidden;
-        background-color: black;
-      }
-      #custom-overlay {
-        position: fixed;
-        top: 0; left: 0;
-        width: 100%; height: 100%;
-        z-index: 999;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
         background: black;
-      }
-      #custom-start-btn {
-        font-size: 20px;
-        padding: 16px 40px;
-        background: #007aff;
-        color: white;
-        border: none;
-        border-radius: 12px;
-        font-family: -apple-system, sans-serif;
-        cursor: pointer;
-      }
-      #custom-hint {
-        color: rgba(255,255,255,0.6);
-        margin-top: 16px;
-        font-family: -apple-system, sans-serif;
-        font-size: 14px;
       }
     </style>
   </head>
   <body>
-
-    <!-- Наш кастомный оверлей с одной кнопкой -->
-    <div id="custom-overlay">
-      <button id="custom-start-btn">▶ Запустить AR</button>
-      <div id="custom-hint">Потребуется доступ к камере</div>
-    </div>
-
-    <!-- Сцена строго по образцу разработчика -->
     <a-scene 
-      id="ar-scene"
       mindar-image="imageTargetSrc: target.mind;"
       color-space="sRGB"
       renderer="colorManagement: true, physicallyCorrectLights"
       vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-      embedded
-      style="display: none;">
-
+      device-orientation-permission-ui="enabled: true">
+      
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       
-      <!-- Метка с вашей 3D-моделью -->
       <a-entity mindar-image-target="targetIndex: 0">
         <a-gltf-model 
           src="model.glb"
@@ -71,27 +32,5 @@
         </a-gltf-model>
       </a-entity>
     </a-scene>
-
-    <script>
-      document.getElementById('custom-start-btn').addEventListener('click', function() {
-        
-        // Убираем оверлей
-        document.getElementById('custom-overlay').style.display = 'none';
-        
-        // Показываем сцену
-        var scene = document.getElementById('ar-scene');
-        scene.style.display = 'block';
-        
-        // Ждём загрузки и запускаем видео
-        function tryStartVideo() {
-          if (scene.hasLoaded && scene.components['mindar-image']) {
-            scene.components['mindar-image'].startVideo();
-          } else {
-            setTimeout(tryStartVideo, 100);
-          }
-        }
-        tryStartVideo();
-      });
-    </script>
   </body>
 </html>
