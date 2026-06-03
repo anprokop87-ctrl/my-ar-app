@@ -42,13 +42,11 @@
   </head>
   <body>
 
-    <!-- Наш оверлей с кнопкой -->
     <div id="start-overlay">
       <button id="start-btn">▶ Запустить AR</button>
       <div id="start-hint">Потребуется доступ к камере</div>
     </div>
 
-    <!-- Сцена A-Frame (изначально скрыта) -->
     <a-scene 
       id="ar-scene"
       mindar-image="imageTargetSrc: target.mind;"
@@ -63,7 +61,7 @@
         <a-gltf-model 
           src="model.glb"
           position="0 0 0"
-          scale="1 1 1"
+          scale="0.15 0.15 0.15"
           rotation="0 0 0"
           animation-mixer>
         </a-gltf-model>
@@ -80,15 +78,27 @@
         var scene = document.getElementById('ar-scene');
         scene.style.display = 'block';
         
-        // Ждём загрузки и запускаем камеру
-        function tryStartVideo() {
+        // Ждём загрузки и вызываем ПРАВИЛЬНЫЙ метод
+        function tryStart() {
           if (scene.hasLoaded && scene.components['mindar-image']) {
-            scene.components['mindar-image'].startVideo();
+            // Пробуем оба метода
+            var mindar = scene.components['mindar-image'];
+            if (typeof mindar.start === 'function') {
+              mindar.start();
+            } else if (typeof mindar.startVideo === 'function') {
+              mindar.startVideo();
+            } else {
+              // Последняя попытка — ищем video и запускаем
+              var video = document.querySelector('video');
+              if (video) {
+                video.play();
+              }
+            }
           } else {
-            setTimeout(tryStartVideo, 100);
+            setTimeout(tryStart, 100);
           }
         }
-        tryStartVideo();
+        tryStart();
       });
     </script>
   </body>
