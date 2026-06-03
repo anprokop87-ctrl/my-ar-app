@@ -11,13 +11,51 @@
         background-color: black;
         position: fixed;
       }
+      #start-overlay {
+        position: fixed;
+        top: 0; left: 0;
+        width: 100%; height: 100%;
+        background: black;
+        z-index: 999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
+      #start-btn {
+        font-size: 20px;
+        padding: 16px 40px;
+        background: #007aff;
+        color: white;
+        border: none;
+        border-radius: 12px;
+        font-family: -apple-system, sans-serif;
+        cursor: pointer;
+      }
+      #start-hint {
+        color: rgba(255,255,255,0.6);
+        margin-top: 16px;
+        font-family: -apple-system, sans-serif;
+        font-size: 14px;
+      }
     </style>
   </head>
   <body>
+
+    <!-- Наш оверлей с кнопкой -->
+    <div id="start-overlay">
+      <button id="start-btn">▶ Запустить AR</button>
+      <div id="start-hint">Потребуется доступ к камере</div>
+    </div>
+
+    <!-- Сцена A-Frame (изначально скрыта) -->
     <a-scene 
+      id="ar-scene"
       mindar-image="imageTargetSrc: target.mind;"
       vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: true">
+      device-orientation-permission-ui="enabled: false"
+      embedded
+      style="display: none;">
       
       <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
       
@@ -26,10 +64,32 @@
           src="model.glb"
           position="0 0 0"
           scale="1 1 1"
-          rotation="90 0 0"
+          rotation="0 0 0"
           animation-mixer>
         </a-gltf-model>
       </a-entity>
     </a-scene>
+
+    <script>
+      document.getElementById('start-btn').addEventListener('click', function() {
+        
+        // Убираем оверлей
+        document.getElementById('start-overlay').style.display = 'none';
+        
+        // Показываем сцену
+        var scene = document.getElementById('ar-scene');
+        scene.style.display = 'block';
+        
+        // Ждём загрузки и запускаем камеру
+        function tryStartVideo() {
+          if (scene.hasLoaded && scene.components['mindar-image']) {
+            scene.components['mindar-image'].startVideo();
+          } else {
+            setTimeout(tryStartVideo, 100);
+          }
+        }
+        tryStartVideo();
+      });
+    </script>
   </body>
 </html>
