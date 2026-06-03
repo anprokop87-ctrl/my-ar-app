@@ -15,7 +15,8 @@
   </head>
   <body>
     <a-scene 
-      mindar-image="imageTargetSrc: target.mind;"
+      id="ar-scene"
+      mindar-image="imageTargetSrc: target.mind; filterMinCF: 0.01; filterBeta: 0.001; warmupTolerance: 5; missTolerance: 10;"
       vr-mode-ui="enabled: false"
       device-orientation-permission-ui="enabled: true">
       
@@ -25,11 +26,35 @@
         <a-gltf-model 
           src="model.glb"
           position="0 0 0"
-          scale="1 1 1"
-          rotation="0 90 90"
+          scale="0.15 0.15 0.15"
+          rotation="0 0 0"
           animation-mixer>
         </a-gltf-model>
       </a-entity>
     </a-scene>
+
+    <script>
+      // Принудительно задаём параметры видео для всех браузеров
+      window.addEventListener('load', function() {
+        var scene = document.getElementById('ar-scene');
+        
+        scene.addEventListener('arReady', function() {
+          var video = document.querySelector('video');
+          if (video && video.srcObject) {
+            var track = video.srcObject.getVideoTracks()[0];
+            if (track) {
+              // Пытаемся установить высокое разрешение и частоту кадров
+              track.applyConstraints({
+                width: { ideal: 1280 },
+                height: { ideal: 720 },
+                frameRate: { ideal: 30 }
+              }).catch(function() {
+                // Если не получилось — ок, используем что есть
+              });
+            }
+          }
+        });
+      });
+    </script>
   </body>
 </html>
